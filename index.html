@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered Security Operations Center (SOC) Assistant — Real-time threat detection, intelligent alert analysis, and automated incident response for cybersecurity teams.">
+  <title>AI SOC Assistant — Security Operations Center</title>
+  <link rel="stylesheet" href="index.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body>
+
+  <div class="app-layout">
+
+    <!-- ═══ Sidebar ═══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-icon">🛡️</div>
+          <div class="logo-text">
+            <h1>AI SOC</h1>
+            <span>Security Operations</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item active" data-view="dashboard" id="nav-dashboard">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" data-view="alerts" id="nav-alerts">
+          <span class="icon">🔔</span>
+          <span>Alert Feed</span>
+          <span class="nav-badge" id="alertsBadge">0</span>
+        </div>
+        <div class="nav-item" data-view="investigate" id="nav-investigate">
+          <span class="icon">🔍</span>
+          <span>Investigate</span>
+        </div>
+        <div class="nav-item" data-view="threats" id="nav-threats">
+          <span class="icon">⚠️</span>
+          <span>Threat Intel</span>
+        </div>
+        <div class="nav-item" data-view="vulns" id="nav-vulns">
+          <span class="icon">🏛️</span>
+          <span>Vulnerabilities</span>
+          <span class="nav-badge" id="vulnsBadge" style="background:var(--accent-purple);">LIVE</span>
+        </div>
+
+        <div class="nav-section-title">AI Tools</div>
+        <div class="nav-item" data-view="chat" id="nav-chat">
+          <span class="icon">🤖</span>
+          <span>AI Assistant</span>
+        </div>
+
+        <div class="nav-section-title">System</div>
+        <div class="nav-item" data-view="settings" id="nav-settings">
+          <span class="icon">⚙️</span>
+          <span>Settings</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status">
+          <div class="status-dot"></div>
+          <div>
+            <span class="status-text">AI Engine Active</span>
+            <span class="status-sub">All systems operational</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ═══ Main Content ═══ -->
+    <div class="main-content">
+
+      <!-- Header -->
+      <header class="header">
+        <button class="hamburger" id="hamburgerBtn">☰</button>
+        <div class="header-search">
+          <span class="search-icon">🔎</span>
+          <input type="text" id="headerSearch" placeholder="Search alerts, IPs, assets…" autocomplete="off">
+        </div>
+        <div class="header-actions">
+          <div class="live-indicator">
+            <div class="live-dot"></div>
+            LIVE
+          </div>
+          <button class="header-btn" title="Notifications">
+            🔔
+            <span class="notification-dot"></span>
+          </button>
+          <span class="header-time" id="headerClock">--:--:--</span>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+
+        <!-- ═══════════════════════════════════════════════════
+             DASHBOARD VIEW
+             ═══════════════════════════════════════════════════ -->
+        <div class="page-view active" id="view-dashboard">
+          <h2 class="page-title">Security Dashboard</h2>
+          <p class="page-subtitle">Real-time security posture &amp; threat landscape overview</p>
+
+          <div class="dashboard-grid">
+
+            <!-- Metric Cards Row -->
+            <div class="metrics-row">
+              <div class="card metric-card info">
+                <div class="metric-label">Total Alerts</div>
+                <div class="metric-value" id="metricTotal">--</div>
+                <div class="metric-change up">↑ Last 24h</div>
+                <canvas class="metric-sparkline" id="sparkTotal"></canvas>
+              </div>
+              <div class="card metric-card critical">
+                <div class="metric-label">Critical Alerts</div>
+                <div class="metric-value" id="metricCritical">--</div>
+                <div class="metric-change up">↑ Needs attention</div>
+                <canvas class="metric-sparkline" id="sparkCritical"></canvas>
+              </div>
+              <div class="card metric-card high">
+                <div class="metric-label">Open Alerts</div>
+                <div class="metric-value" id="metricOpen">--</div>
+                <div class="metric-change">Awaiting review</div>
+                <canvas class="metric-sparkline" id="sparkOpen"></canvas>
+              </div>
+              <div class="card metric-card purple">
+                <div class="metric-label">Avg Response</div>
+                <div class="metric-value" id="metricMTTR">--</div>
+                <div class="metric-change down">↓ AI-optimized</div>
+                <canvas class="metric-sparkline" id="sparkMTTR"></canvas>
+              </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="charts-row-3">
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title"><span class="icon">🎯</span> Threat Score</span>
+                </div>
+                <div class="card-body card-body--centered">
+                  <canvas id="threatScoreCanvas" class="chart-canvas chart-canvas--donut"></canvas>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title"><span class="icon">📈</span> Alert Timeline (24h)</span>
+                </div>
+                <div class="card-body">
+                  <canvas id="timelineCanvas" class="chart-canvas medium"></canvas>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title"><span class="icon">🔴</span> Severity Distribution</span>
+                </div>
+                <div class="card-body card-body--centered">
+                  <canvas id="severityDonutCanvas" class="chart-canvas chart-canvas--donut"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="charts-row">
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title"><span class="icon">⚔️</span> Top Attack Types</span>
+                </div>
+                <div class="card-body">
+                  <canvas id="attackDistCanvas" class="chart-canvas large"></canvas>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title"><span class="icon">📡</span> Alert Sources</span>
+                </div>
+                <div class="card-body">
+                  <canvas id="sourceDistCanvas" class="chart-canvas large"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"><span class="icon">🔔</span> Recent Alerts</span>
+                <span class="card-link-muted" onclick="document.querySelector('[data-view=alerts]').click();">View all →</span>
+              </div>
+              <div class="card-body card-body--compact">
+                <div id="recentAlertsList"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             ALERTS VIEW
+             ═══════════════════════════════════════════════════ -->
+        <div class="page-view" id="view-alerts">
+          <h2 class="page-title">Alert Feed</h2>
+          <p class="page-subtitle">Real-time security alerts from all monitored sources</p>
+
+          <div class="alerts-controls">
+            <div class="filter-group">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="critical">🔴 Critical</button>
+              <button class="filter-btn" data-filter="high">🟠 High</button>
+              <button class="filter-btn" data-filter="medium">🟡 Medium</button>
+              <button class="filter-btn" data-filter="low">🟢 Low</button>
+            </div>
+            <span class="alert-count-badge" id="alertsCount">0 alerts</span>
+          </div>
+
+          <!-- Alerts Table Header -->
+          <div class="alert-item alert-item--header">
+            <div></div>
+            <span>Alert ID</span>
+            <span>Type</span>
+            <span>Source IP</span>
+            <span>Target</span>
+            <span>Time</span>
+            <span>Status</span>
+          </div>
+
+          <div class="alerts-list" id="alertsList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             INVESTIGATE VIEW
+             ═══════════════════════════════════════════════════ -->
+        <div class="page-view" id="view-investigate">
+          <h2 class="page-title">AI Investigation</h2>
+          <p class="page-subtitle">Use AI to investigate alerts, IPs, assets, and attack patterns</p>
+
+          <div class="investigate-search">
+            <input type="text" id="investigateInput" placeholder="Enter alert ID, IP address, attack type, or describe what to investigate…" autocomplete="off">
+            <button id="investigateBtn">🔍 Investigate</button>
+          </div>
+
+          <div class="quick-actions quick-actions--spaced">
+            <button class="quick-action" onclick="document.getElementById('investigateInput').value='Threat summary';document.getElementById('investigateBtn').click();">📊 Threat Summary</button>
+            <button class="quick-action" onclick="document.getElementById('investigateInput').value='Critical alerts';document.getElementById('investigateBtn').click();">🚨 Critical Alerts</button>
+            <button class="quick-action" onclick="document.getElementById('investigateInput').value='Ransomware';document.getElementById('investigateBtn').click();">💀 Ransomware</button>
+            <button class="quick-action" onclick="document.getElementById('investigateInput').value='DDoS';document.getElementById('investigateBtn').click();">🌊 DDoS Attacks</button>
+            <button class="quick-action" onclick="document.getElementById('investigateInput').value='Brute Force';document.getElementById('investigateBtn').click();">🔓 Brute Force</button>
+            <button class="quick-action" onclick="document.getElementById('investigateInput').value='MITRE ATT&CK';document.getElementById('investigateBtn').click();">📋 MITRE ATT&CK</button>
+          </div>
+
+          <div class="investigation-result investigation-result--hidden" id="investigateResult">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             THREATS VIEW
+             ═══════════════════════════════════════════════════ -->
+        <div class="page-view" id="view-threats">
+          <h2 class="page-title">Threat Intelligence</h2>
+          <p class="page-subtitle">Active threat landscape with AI-driven classification</p>
+
+          <div class="threat-intel-grid" id="threatsGrid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             VULNERABILITIES VIEW (Real-Time NVD + CISA)
+             ═══════════════════════════════════════════════════ -->
+        <div class="page-view" id="view-vulns">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 class="page-title">🏛️ Real-Time Vulnerabilities</h2>
+              <p class="page-subtitle">Live CVE feeds from NIST NVD &amp; CISA Known Exploited Vulnerabilities</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="feed-status" id="feedStatus">⏳ Loading feeds…</span>
+              <button class="vuln-refresh-btn" id="vulnRefreshBtn" title="Refresh feeds">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <!-- Feed Status Cards -->
+          <div class="vuln-status-row" id="vulnStatusRow">
+            <div class="vuln-status-card nvd">
+              <div class="vuln-status-icon">🏛️</div>
+              <div>
+                <div class="vuln-status-title">NVD — National Vulnerability Database</div>
+                <div class="vuln-status-detail" id="nvdStatusDetail">Connecting…</div>
+              </div>
+              <div class="vuln-status-count" id="nvdCount">--</div>
+            </div>
+            <div class="vuln-status-card cisa">
+              <div class="vuln-status-icon">🇺🇸</div>
+              <div>
+                <div class="vuln-status-title">CISA — Known Exploited Vulnerabilities</div>
+                <div class="vuln-status-detail" id="cisaStatusDetail">Connecting…</div>
+              </div>
+              <div class="vuln-status-count" id="cisaCount">--</div>
+            </div>
+          </div>
+
+          <!-- CVSS Scores by Vulnerability Type -->
+          <div class="cvss-type-section">
+            <div class="cvss-type-header">
+              <h3>📊 CVSS Scores by Vulnerability Type</h3>
+              <span class="cvss-type-subtitle">Average & max CVSS across all loaded CVEs</span>
+            </div>
+            <div class="cvss-type-grid" id="cvssTypeGrid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Severity Filter -->
+          <div class="alerts-controls" style="margin-top:20px;">
+            <div class="filter-group">
+              <button class="filter-btn active" data-vuln-filter="all">All</button>
+              <button class="filter-btn" data-vuln-filter="critical">🔴 Critical</button>
+              <button class="filter-btn" data-vuln-filter="high">🟠 High</button>
+              <button class="filter-btn" data-vuln-filter="medium">🟡 Medium</button>
+              <button class="filter-btn" data-vuln-filter="low">🟢 Low</button>
+            </div>
+            <div class="filter-group">
+              <button class="filter-btn active" data-vuln-source="all">All Sources</button>
+              <button class="filter-btn" data-vuln-source="nvd">🏛️ NVD</button>
+              <button class="filter-btn" data-vuln-source="cisa">🇺🇸 CISA KEV</button>
+            </div>
+            <span class="alert-count-badge" id="vulnsCount">0 vulnerabilities</span>
+          </div>
+
+          <!-- Vulnerability List -->
+          <div class="vuln-list" id="vulnList">
+            <div class="vuln-loading" id="vulnLoading">
+              <div class="vuln-spinner"></div>
+              <p>Fetching real-time vulnerability data from NVD &amp; CISA…</p>
+              <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">This may take a few seconds on first load</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             CHAT VIEW
+             ═══════════════════════════════════════════════════ -->
+        <div class="page-view" id="view-chat">
+          <div class="chat-container">
+            <div class="chat-header-bar">
+              <div class="chat-ai-avatar">🤖</div>
+              <div class="chat-ai-info">
+                <h3>AI SOC Assistant</h3>
+                <span>Online — Ready to assist</span>
+              </div>
+            </div>
+
+            <div class="quick-actions">
+              <button class="quick-action" data-query="What is the current threat summary?">📊 Threat Summary</button>
+              <button class="quick-action" data-query="Show me critical alerts">🚨 Critical Alerts</button>
+              <button class="quick-action" data-query="Investigate the latest threat">🔍 Investigate</button>
+              <button class="quick-action" data-query="What remediation steps do you recommend?">🛡️ Remediation</button>
+              <button class="quick-action" data-query="Tell me about MITRE ATT&CK">📋 MITRE ATT&CK</button>
+              <button class="quick-action" data-query="What are security best practices?">🏆 Best Practices</button>
+              <button class="quick-action" data-query="help">❓ Help</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+              <!-- Populated by JS -->
+            </div>
+
+            <div class="chat-input-area">
+              <input type="text" id="chatInput" placeholder="Ask the AI SOC Assistant…" autocomplete="off">
+              <button class="chat-send-btn" id="chatSendBtn" title="Send message">➤</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SETTINGS VIEW
+             ═══════════════════════════════════════════════════ -->
+        <div class="page-view" id="view-settings">
+          <h2 class="page-title">Settings</h2>
+          <p class="page-subtitle">Configure AI SOC Assistant preferences and integrations</p>
+
+          <div class="settings-section">
+            <h3>🔔 Notifications</h3>
+            <p>Configure how and when you receive alert notifications</p>
+            <div class="setting-item">
+              <div>
+                <label>Real-time Alert Notifications</label>
+                <div class="desc">Show popup notifications for new alerts</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <label>Critical Alert Sound</label>
+                <div class="desc">Play an audible alert for critical severity events</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <label>Email Digest</label>
+                <div class="desc">Send daily summary of security events via email</div>
+              </div>
+              <div class="toggle-switch"></div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>🤖 AI Engine</h3>
+            <p>Configure AI analysis behavior and sensitivity</p>
+            <div class="setting-item">
+              <div>
+                <label>Auto-Investigation</label>
+                <div class="desc">Automatically investigate critical & high severity alerts</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <label>MITRE ATT&CK Mapping</label>
+                <div class="desc">Map all alerts to MITRE ATT&CK framework</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <label>Auto-Remediation</label>
+                <div class="desc">Enable automatic remediation for low-risk threats</div>
+              </div>
+              <div class="toggle-switch"></div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>📡 Data Sources</h3>
+            <p>Connect and manage security data sources</p>
+            <div class="setting-item">
+              <div>
+                <label>Firewall Logs</label>
+                <div class="desc">Palo Alto, Fortinet, Cisco ASA</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <label>IDS/IPS (Snort/Suricata)</label>
+                <div class="desc">Intrusion detection and prevention systems</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <label>Cloud Security (AWS/Azure/GCP)</label>
+                <div class="desc">Cloud platform security event logs</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <label>Endpoint Detection (EDR)</label>
+                <div class="desc">CrowdStrike, SentinelOne, Carbon Black</div>
+              </div>
+              <div class="toggle-switch active"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page-content -->
+    </div><!-- /main-content -->
+  </div><!-- /app-layout -->
+
+  <!-- ═══ Alert Detail Overlay ═══ -->
+  <div class="alert-detail-overlay" id="alertDetailOverlay">
+    <div class="alert-detail-panel">
+      <div class="detail-header">
+        <h2>🔍 <span id="detailId">ALT-00000</span></h2>
+        <button class="detail-close" onclick="window.closeAlertDetail()">✕</button>
+      </div>
+      <div class="detail-body">
+
+        <div class="detail-section">
+          <h3>📋 Alert Information</h3>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <label>Severity</label>
+              <div class="value" id="detailSeverity">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Attack Type</label>
+              <div class="value" id="detailType">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Source</label>
+              <div class="value" id="detailSource">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Source IP</label>
+              <div class="value mono" id="detailSrcIP">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Target Asset</label>
+              <div class="value" id="detailTarget">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Status</label>
+              <div class="value" id="detailStatus">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Timestamp</label>
+              <div class="value mono" id="detailTime">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Event Count</label>
+              <div class="value" id="detailEvents">--</div>
+            </div>
+            <div class="detail-field">
+              <label>MITRE ATT&CK</label>
+              <div class="value mono" id="detailMitre">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Kill Chain Phase</label>
+              <div class="value" id="detailKillChain">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>🤖 AI Analysis</h3>
+          <div class="ai-analysis-box" id="detailAIAnalysis">--</div>
+          <div class="ai-confidence-row">
+            <span class="ai-confidence-label">AI Confidence:</span>
+            <span class="ai-confidence-value" id="detailConfidence">--%</span>
+          </div>
+          <div class="confidence-bar">
+            <div class="confidence-fill" id="confidenceFill"></div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>🛡️ Recommended Remediation</h3>
+          <ul class="remediation-list" id="detailRemediation">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Vulnerability Remediation Overlay ═══ -->
+  <div class="vuln-detail-overlay" id="vulnDetailOverlay">
+    <div class="vuln-detail-panel">
+      <div class="detail-header">
+        <h2>🛡️ <span id="vulnDetailId">CVE-0000-0000</span></h2>
+        <button class="detail-close" onclick="window.closeVulnDetail()">✕</button>
+      </div>
+      <div class="detail-body">
+
+        <!-- CVE Overview -->
+        <div class="detail-section">
+          <h3>📋 Vulnerability Information</h3>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <label>CVE ID</label>
+              <div class="value mono" id="vdCveId">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Severity</label>
+              <div class="value" id="vdSeverity">--</div>
+            </div>
+            <div class="detail-field">
+              <label>CVSS Score</label>
+              <div class="value mono" id="vdCvss">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Attack Type</label>
+              <div class="value" id="vdAttackType">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Source</label>
+              <div class="value" id="vdSource">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Published</label>
+              <div class="value mono" id="vdPublished">--</div>
+            </div>
+            <div class="detail-field">
+              <label>CWE</label>
+              <div class="value mono" id="vdCwe">--</div>
+            </div>
+            <div class="detail-field">
+              <label>Affected Product</label>
+              <div class="value" id="vdProduct">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="detail-section">
+          <h3>📝 Description</h3>
+          <div class="vuln-detail-desc" id="vdDescription">--</div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="detail-section">
+          <h3>⚠️ Risk Assessment</h3>
+          <div class="risk-assessment-box" id="vdRiskBox">--</div>
+        </div>
+
+        <!-- CVSS Breakdown -->
+        <div class="detail-section" id="vdCvssSection">
+          <h3>📊 CVSS Score Breakdown</h3>
+          <div class="cvss-breakdown" id="vdCvssBreakdown">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Remediation Playbook -->
+        <div class="detail-section">
+          <h3 id="vdPlaybookTitle">🛡️ Remediation Playbook</h3>
+          <div class="remediation-progress-bar">
+            <div class="remediation-progress-fill" id="vdProgressFill"></div>
+          </div>
+          <div class="remediation-progress-text" id="vdProgressText">0 of 0 steps completed</div>
+
+          <div class="remediation-playbook" id="vdRemediation">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Verification Checklist -->
+        <div class="detail-section">
+          <h3>✅ Verification Checklist</h3>
+          <div class="verification-checklist" id="vdVerification">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- References -->
+        <div class="detail-section">
+          <h3>🔗 References</h3>
+          <div class="vuln-detail-refs" id="vdReferences">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="charts.js"></script>
+  <script src="realtime.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
